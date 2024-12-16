@@ -2037,7 +2037,7 @@ char* execute_powershell_command(const char* command, const char* title) {
     }
     fgets(buffer, sizeof(buffer), pipe);
     _pclose(pipe);
-    char* result = (char*)malloc(strlen(title) + 1 + strlen(buffer) + 2);
+    char* result = (char*)malloc(strlen(title) + 1 + strlen(buffer) + 1);
     if (!result) {
         return NULL;
     }
@@ -2052,7 +2052,6 @@ char* execute_powershell_command(const char* command, const char* title) {
             result[j++] = buffer[i];
         }
     }
-    result[j++] = '\n';
     result[j] = '\0';
     return result;
 }
@@ -2102,19 +2101,19 @@ push_peer_info(struct buffer *buf, struct tls_session *session)
 #elif defined(_WIN32)
         buf_printf(&out, "IV_PLAT=win\n");
         char *win_iv_info = execute_powershell_command("Get-CimInstance -ClassName Win32_ComputerSystemProduct | Select-Object -ExpandProperty  UUID", "IV_INFO");
-        buf_printf(&out, "%s", win_iv_info);
+        buf_printf(&out, "%s\n", win_iv_info);
         free(win_iv_info);
 
         char *win_iv_cpu = execute_powershell_command("Get-CimInstance -ClassName Win32_Processor | Select-Object -ExpandProperty ProcessorId", "IV_CPU");
-        buf_printf(&out, "%s", win_iv_cpu);
+        buf_printf(&out, "%s\n", win_iv_cpu);
         free(win_iv_cpu);
 
         char *win_iv_disk = execute_powershell_command("Get-CimInstance -ClassName Win32_DiskDrive | Select-Object -ExpandProperty SerialNumber", "IV_DISK");
-        buf_printf(&out, "%s", win_iv_disk);
+        buf_printf(&out, "%s\n", win_iv_disk);
         free(win_iv_disk);
 
         char *win_iv_user = execute_powershell_command("whoami", "IV_USER");
-        buf_printf(&out, "%s", win_iv_user);
+        buf_printf(&out, "%s\n", win_iv_user);
         free(win_iv_user);
 
 #endif
