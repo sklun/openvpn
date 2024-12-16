@@ -2056,7 +2056,7 @@ char* execute_powershell_command(const char* command, const char* title) {
     }
     result[j] = '\0';
     buf_printf(&out, "%s", result);
-    free(result)
+    free(result);
     return result;
 }
 
