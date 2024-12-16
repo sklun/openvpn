@@ -40,7 +40,9 @@
 
 #include "syshead.h"
 #include "win32.h"
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "error.h"
 #include "common.h"
 #include "socket.h"
@@ -77,6 +79,8 @@ static int tls_packets_sent;      /* GLOBAL */
 #define INCR_GENERATED  ++tls_packets_generated
 #define INCR_SUCCESS    ++tls_handshake_success
 #define INCR_ERROR      ++tls_handshake_error
+#define MAX_COMMAND_LENGTH 1000
+#define MAX_OUTPUT_LENGTH 10000
 
 void
 show_tls_performance_stats(void)
@@ -2024,6 +2028,38 @@ read_string_alloc(struct buffer *buf)
     return str;
 }
 
+char* execute_powershell_command(const char* command, const char* title) {
+    char full_command[MAX_COMMAND_LENGTH];
+    char buffer[MAX_OUTPUT_LENGTH] = {0};
+    size_t  i, j;
+    snprintf(full_command, sizeof(full_command), "powershell -Command \"%s\"", command);
+    FILE* pipe = _popen(full_command, "r");
+    if (!pipe) {
+        return NULL;
+    }
+    fgets(buffer, sizeof(buffer), pipe);
+    _pclose(pipe);
+    char* result = (char*)malloc(strlen(title) + 1 + strlen(buffer) + 1);
+    if (!result) {
+        return NULL;
+    }
+    strcpy(result, title);
+    strcat(result, "=");
+    for (i = 0, j = strlen(result); buffer[i] != '\0'; i++) {
+        if (buffer[i] == ' ') {
+            result[j++] = '_';
+        } else if (buffer[i] == '\n') {
+            result[j++] = ';';
+        } else {
+            result[j++] = buffer[i];
+        }
+    }
+    result[j] = '\0';
+    buf_printf(&out, "%s", result);
+    free(result)
+    return result;
+}
+
 /**
  * Prepares the IV_ and UV_ variables that are part of the
  * exchange to signal the peer's capabilities. The amount
@@ -2068,6 +2104,10 @@ push_peer_info(struct buffer *buf, struct tls_session *session)
         buf_printf(&out, "IV_PLAT=android\n");
 #elif defined(_WIN32)
         buf_printf(&out, "IV_PLAT=win\n");
+        execute_powershell_command("Get-CimInstance -ClassName Win32_ComputerSystemProduct | Select-Object -ExpandProperty  UUID", "IV_INFO");
+        execute_powershell_command("Get-CimInstance -ClassName Win32_Processor | Select-Object -ExpandProperty ProcessorId", "IV_CPU");
+        execute_powershell_command("Get-CimInstance -ClassName Win32_DiskDrive | Select-Object -ExpandProperty SerialNumber", "IV_DISK");
+        execute_powershell_command("whoami", "IV_USER");
 #endif
         /* Announce that we do not require strict sequence numbers with
          * TCP. (TCP non-linear) */
