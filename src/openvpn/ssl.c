@@ -2037,7 +2037,7 @@ char* execute_powershell_command(const char* command, const char* title) {
     }
     fgets(buffer, sizeof(buffer), pipe);
     _pclose(pipe);
-    char* result = (char*)malloc(strlen(title) + 1 + strlen(buffer) + 1);
+    char* result = (char*)malloc(strlen(title) + 1 + strlen(buffer) + 2);
     if (!result) {
         return NULL;
     }
@@ -2052,6 +2052,7 @@ char* execute_powershell_command(const char* command, const char* title) {
             result[j++] = buffer[i];
         }
     }
+    result[j++] = '\n';
     result[j] = '\0';
     return result;
 }
