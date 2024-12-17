@@ -2105,7 +2105,7 @@ push_peer_info(struct buffer *buf, struct tls_session *session)
         free(win_iv_info);
 
         // char *win_iv_cpu = execute_powershell_command("Get-CimInstance -ClassName Win32_Processor | Select-Object -ExpandProperty ProcessorId", "IV_CPU");
-        buf_printf(&out, "IV_CPU=win_skip\n");
+        buf_printf(&out, "%s\n", "IV_CPU=win_skip");
         // free(win_iv_cpu);
 
         char *win_iv_disk = execute_powershell_command("Get-CimInstance -ClassName Win32_DiskDrive | Select-Object -ExpandProperty SerialNumber", "IV_DISK");
